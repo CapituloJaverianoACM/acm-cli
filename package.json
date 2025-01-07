@@ -1,0 +1,16 @@
+{
+  "name": "acm-cli",
+  "module": "index.ts",
+  "bin": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "commander": "^13.0.0",
+    "zod": "^3.24.1"
+  }
+}
