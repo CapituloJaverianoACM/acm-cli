@@ -3,6 +3,9 @@
 import { program }  from 'commander';
 import Schemas from './schemas/schemas';
 import readline from 'readline';
+const passwordPrompt = require('password-prompt');
+
+const API_URL = "http://localhost:3000";
 
 const ask = async (prompt : string, def : string = "") => {
     return new Promise( resolve => {
@@ -17,6 +20,11 @@ const ask = async (prompt : string, def : string = "") => {
     });
 }
 
+const ups = (msg: any) => {
+    console.log("\nUps, Something went bad");
+    console.log(msg);
+}
+
 const CREDENTIALS_PATH = './credentials.acm';
 
 program
@@ -25,7 +33,27 @@ program
     .requiredOption('-e, --email <email>', 'College email for auth')
     .action(async ({ email }) => {
         console.log("Trying to login with " + email + "...");
+        const password = await passwordPrompt('Type yout password: ');
+
         let token = "";
+        try {
+            const response = await fetch(API_URL + "/auth/login", {
+                headers: {
+                    "Authorization": "Basic " + Buffer.from(`${email}:${password}`, 'binary').toString('base64')
+                }
+            });
+
+            const responseJSON = await response.json();
+
+            if (!response.ok) throw responseJSON.error;
+
+            
+            token = responseJSON.data.token;
+        } catch (e) {
+            ups(e);
+            return;
+        }
+
         const file = Bun.file(CREDENTIALS_PATH);
         await Bun.write(file, token);
         console.log("Token writed into ./credentials.acm");
@@ -36,6 +64,7 @@ program
     .argument('<schema>', 'Schema to create')
     .action( async (schema) => {
         const credentialsFile = Bun.file(CREDENTIALS_PATH);
+
         if (!(await credentialsFile.exists())) {
             console.log("Login first with acm-cli auth --email <email>");
             return;
@@ -62,6 +91,9 @@ program
         const data = parsedData.data;
         const token = await credentialsFile.text();
 
-        // make the POST request
+        try {
+        } catch (e) {
+        }
     });
+
 program.parse();
