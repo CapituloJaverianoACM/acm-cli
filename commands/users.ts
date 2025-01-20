@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { ask, info, readCredentialsFile, success, ups } from "../utils";
-import { API_URL } from "../config";
+import Config from "../config";
 const passwordPrompt = require('password-prompt');
 
 
@@ -18,7 +18,7 @@ const addUserAction = async () => {
     const password = await passwordPrompt("Type the password: ");
 
     try {
-        const response = await fetch(`${API_URL}/users/create`, {
+        const response = await fetch(`${Config.get('API_URL')}/users/create`, {
             method: 'POST',
             headers: {
                 'Authorization': "Bearer " + token,
@@ -57,7 +57,7 @@ const deleteUserAction = async (email: string) => {
     }
 
     try {
-        const response = await fetch(`${API_URL}/users/${email}`, {
+        const response = await fetch(`${Config.get('API_URL')}/users/${email}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + token 

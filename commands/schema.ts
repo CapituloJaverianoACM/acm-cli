@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { ask, info, readCredentialsFile, success, ups, verifyJWTExpiration } from "../utils";
 import Schemas from '../schemas/schemas';
-import { API_URL } from "../config";
+import Config from "../config";
 const passwordPrompt = require('password-prompt');
 
 
@@ -39,7 +39,7 @@ const addSchemaAction = async (schema: string) => {
     const data = parsedData.data;
 
     try {
-        const response = await fetch(API_URL + "/" + schema + "/create", {
+        const response = await fetch(Config.get('API_URL') + "/" + schema + "/create", {
             method: 'POST',
             headers: {
                 'Authorization': "Bearer " + token,
@@ -74,7 +74,7 @@ export const deleteSchemaAction = async (schema: string) => {
 
     try {
 
-        const response = await fetch(`${API_URL}/${schema}/${id}`, {
+        const response = await fetch(`${Config.get('API_URL')}/${schema}/${id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': "Bearer " + token

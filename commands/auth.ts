@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { API_URL, CREDENTIALS_PATH } from "../config";
+import Config from "../config";
 import { info, success, ups } from "../utils";
 const passwordPrompt = require('password-prompt');
 
@@ -9,7 +9,7 @@ const loginAction = async ({ email } : { email : string }) => {
 
     let token = "";
     try {
-        const response = await fetch(API_URL + "/auth/login", {
+        const response = await fetch(Config.get('API_URL') + "/auth/login", {
             headers: {
                 "Authorization": "Basic " + Buffer.from(`${email}:${password}`, 'binary').toString('base64')
             }
@@ -26,9 +26,8 @@ const loginAction = async ({ email } : { email : string }) => {
         return;
     }
 
-    const file = Bun.file(CREDENTIALS_PATH);
-    await Bun.write(file, token);
-    success("Token writed into ./credentials.acm");
+    Config.set('jwt', token);
+    success("Token saved.");
 }
 
 export const injectAuthCommand = (program: Command) : void => {

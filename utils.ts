@@ -1,5 +1,5 @@
 import readline from 'readline';
-import { API_URL, CREDENTIALS_PATH} from './config';
+import Config from './config';
 
 const colors = {
     red: 31,
@@ -39,14 +39,8 @@ export const success = (msg: any) => {
     console.log(textColor(msg, "green"));
 }
 
-export const readCredentialsFile = async () : Promise<string | null> => {
-
-    const credentialsFile = Bun.file(CREDENTIALS_PATH);
-
-    if (!(await credentialsFile.exists())) {
-        return null;
-    }
-    return await credentialsFile.text();
+export const readCredentialsFile = async () : Promise<any | undefined> => {
+    return Config.get('jwt');
 }
 
 export const verifyJWTExpiration = async () : Promise<boolean> => {
@@ -56,7 +50,7 @@ export const verifyJWTExpiration = async () : Promise<boolean> => {
     if (!token) return false;
 
     try {
-        const response = await fetch(API_URL + "/auth/verify", {
+        const response = await fetch(Config.get('API_URL') + "/auth/verify", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

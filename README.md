@@ -1,15 +1,6 @@
-# acm-cli
+# ACM CLI
 
-To install dependencies:
+CLI for manipulate the data used in the website and users. Make sure to be added first by the Super User (acm@javeriana.edu.co).
 
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.0.18. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+**Developers**
+- Sebastian Galindo. [@TalkySafe143](https://github.com/TalkySafe143)
