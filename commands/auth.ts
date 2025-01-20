@@ -15,7 +15,7 @@ const loginAction = async ({ email } : { email : string }) => {
             }
         });
 
-        const responseJSON = await response.json();
+        const responseJSON : any = await response.json();
 
         if (!response.ok) throw responseJSON.error;
 

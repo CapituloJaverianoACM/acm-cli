@@ -27,7 +27,7 @@ const addUserAction = async () => {
             body: JSON.stringify({ email, password })
         });
 
-        const responseJson = await response.json();
+        const responseJson : any = await response.json();
 
         if (!response.ok) throw responseJson.error;
 
@@ -64,7 +64,7 @@ const deleteUserAction = async (email: string) => {
             }
         });
 
-        const responseJson = await response.json();
+        const responseJson : any = await response.json();
 
         if (!response.ok) throw responseJson.error;
 

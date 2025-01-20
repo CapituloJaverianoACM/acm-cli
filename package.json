@@ -1,8 +1,13 @@
 {
   "name": "acm-cli",
   "module": "index.ts",
-  "bin": "index.ts",
+  "bin": {
+    "acm-cli": "./dist/index.js"
+  },
   "type": "module",
+  "scripts": {
+    "build": "bun build index.ts --target=node --outfile=./dist/index.js"
+  },
   "devDependencies": {
     "bun-types": "latest"
   },

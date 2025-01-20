@@ -80,7 +80,7 @@ export const deleteSchemaAction = async (schema: string) => {
                 'Authorization': "Bearer " + token
             }
         });
-        const responseJson = await response.json();
+        const responseJson : any = await response.json();
 
         if (!response.ok) throw responseJson.error;
     } catch (e) {
