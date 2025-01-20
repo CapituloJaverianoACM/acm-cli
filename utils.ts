@@ -12,7 +12,7 @@ export function textColor(str: string, color: string) {
   return `\x1b[${colors[color] ? colors[color] : 0}m${str}\x1b[0m`;
 }
 
-export const ask = async (prompt : string, def : string = "") => {
+export const ask = async (prompt : string, def : string = "") : Promise<string> => {
     return new Promise( resolve => {
         let cin = readline.createInterface({
             input: process.stdin,

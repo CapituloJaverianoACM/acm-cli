@@ -3,6 +3,7 @@
 import { Command }  from 'commander';
 import { injectAuthCommand } from './commands/auth';
 import { injectSchemaCommand } from './commands/schema';
+import { injectUsersCommand } from './commands/users';
 
 const program = new Command();
 
@@ -27,5 +28,13 @@ const schema = program
                 .description('Commands for manage schemas/data');
 
 injectSchemaCommand(schema);
+
+
+const users = program
+                .command('users')
+                .description('[SUPER USER ONLY] Commands for manage allowed users to use this CLI');
+
+injectUsersCommand(users);
+
 
 program.parseAsync();
