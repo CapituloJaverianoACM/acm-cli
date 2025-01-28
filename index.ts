@@ -4,10 +4,10 @@ import { Command }  from 'commander';
 import { injectAuthCommand } from './commands/auth';
 import { injectSchemaCommand } from './commands/schema';
 import { injectUsersCommand } from './commands/users';
-import { textColor } from './utils';
+import chalk from 'chalk';
 const figlet = require('figlet');
 
-console.log( textColor(figlet.textSync('ACM-CLI', { horizontalLayout: 'full' }), "yellow") );
+console.log( chalk.yellow.bold(figlet.textSync('ACM-CLI', { horizontalLayout: 'full' })) );
 
 const program = new Command();
 
