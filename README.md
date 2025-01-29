@@ -4,3 +4,4 @@ CLI for manipulate the data used in the website and users. Make sure to be added
 
 **Developers**
 - Sebastian Galindo. [@TalkySafe143](https://github.com/TalkySafe143)
+- Adrian Ruiz. [@adrianrrruiz](https://github.com/adrianrrruiz)
