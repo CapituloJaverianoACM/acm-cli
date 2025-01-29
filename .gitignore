@@ -175,3 +175,4 @@ dist
 .DS_Store
 
 credentials.acm
+bin/index.js
