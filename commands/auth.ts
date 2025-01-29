@@ -5,7 +5,7 @@ const passwordPrompt = require('password-prompt');
 
 const loginAction = async ({ email } : { email : string }) => {
     info("Trying to login with " + email + "...");
-    const password = await passwordPrompt('Type yout password: ');
+    const password = await passwordPrompt('Type your password: ');
 
     let token = "";
     try {

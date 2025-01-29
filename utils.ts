@@ -1,16 +1,8 @@
 import readline from 'readline';
 import Config from './config';
+import chalk from 'chalk';
 
-const colors = {
-    red: 31,
-    green: 32,
-    yellow: 33
-}
-
-export function textColor(str: string, color: string) {
-  // Add ANSI escape codes to display text in red.
-  return `\x1b[${colors[color] ? colors[color] : 0}m${str}\x1b[0m`;
-}
+export const colors = chalk;
 
 export const ask = async (prompt : string, def : string = "") : Promise<string> => {
     return new Promise( resolve => {
@@ -28,15 +20,15 @@ export const ask = async (prompt : string, def : string = "") : Promise<string> 
 
 export const ups = (msg : any) => {
     console.log("\nUps, Something went bad");
-    console.log(textColor(msg, "red"));
+    console.log(chalk.red.bold("[ERROR] " + msg));
 }
 
 export const info = (msg: any) => {
-    console.log(textColor(msg, "yellow"));
+    console.log(chalk.yellow.bold(msg));
 }
 
 export const success = (msg: any) => {
-    console.log(textColor(msg, "green"));
+    console.log(chalk.green.bold(msg));
 }
 
 export const readCredentialsFile = async () : Promise<any | undefined> => {
