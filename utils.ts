@@ -1,22 +1,7 @@
-import readline from 'readline';
 import Config from './config';
 import chalk from 'chalk';
 
 export const colors = chalk;
-
-export const ask = async (prompt : string, def : string = "") : Promise<string> => {
-    return new Promise( resolve => {
-        let cin = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
-        });
-        cin.question(prompt + `[${def}] `, input => {
-            cin.close();
-            resolve(input)
-        });
-    });
-}
-
 
 export const ups = (msg : any) => {
     console.log("\nUps, Something went bad");

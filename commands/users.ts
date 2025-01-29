@@ -1,8 +1,6 @@
-import { Command } from "commander";
-import { ask, info, readCredentialsFile, success, ups } from "../utils";
+import { info, readCredentialsFile, success, ups } from "../utils";
 import Config from "../config";
-const passwordPrompt = require('password-prompt');
-
+import { input, password, select } from "@inquirer/prompts";
 
 const addUserAction = async () => {
 
@@ -14,8 +12,8 @@ const addUserAction = async () => {
     }
 
     info("Please, use institucional emails");
-    const email = await ask("Type the email to register: ");
-    const password = await passwordPrompt("Type the password: ");
+    const email = await input({message: "Type the email to register: "});
+    const _password = await password({message: "Type the password: ", mask: true});
 
     try {
         const response = await fetch(`${Config.get('API_URL')}/users/create`, {
@@ -24,7 +22,7 @@ const addUserAction = async () => {
                 'Authorization': "Bearer " + token,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, password: _password })
         });
 
         const responseJson : any = await response.json();
@@ -49,7 +47,7 @@ const deleteUserAction = async (email: string) => {
     }
 
     info("Sure to continue?");
-    const confirm = await ask("Type 'YES': ");
+    const confirm = await input({message: "Type 'YES': "});
 
     if (confirm.toLowerCase() !== 'yes') {
         ups("It's ok, return when your ready :)");
@@ -75,17 +73,30 @@ const deleteUserAction = async (email: string) => {
     }
 }
 
-export const injectUsersCommand = (program: Command) => {
+export const injectUsers = async () => {
+    const answer = await select({
+        message: 'Select an option',
+        choices: [
+            {
+                name: 'add',
+                value: 'add',
+                description: 'Register a user for access to this CLI',
+            },
+            {
+                name: 'delete',
+                value: 'delete',
+                description: 'Delete a user to deny the access to this CLI',
+            },
+        ],
+    });
 
-    program
-        .command('add')
-        .description('Register a user for access to this CLI')
-        .action(addUserAction);
-    
-    program
-        .command('delete')
-        .description('Delete a user to deny the access to this CLI')
-        .argument('<email>', 'Email to deny the access')
-        .action(deleteUserAction);
-
+    switch (answer) {
+        case 'add':
+            await addUserAction();
+            break;
+        case 'delete':
+            const email = await input({ message: 'Type the email to deny the access:' });
+            await deleteUserAction(email);
+            break;
+    }
 }
