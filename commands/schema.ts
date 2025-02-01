@@ -1,16 +1,15 @@
-import { Command } from "commander";
-import { ask, info, readCredentialsFile, success, ups, verifyJWTExpiration } from "../utils";
+import { Command } from 'commander';
+import { readCredentialsFile, success, ups, verifyJWTExpiration } from "../utils";
 import Schemas from '../schemas/schemas';
 import Config from "../config";
-const passwordPrompt = require('password-prompt');
-
+import { input, password, select } from "@inquirer/prompts";
 
 const checkSchemaExist = (schema: string) => (Schemas[schema] !== undefined);
 
 const addSchemaAction = async (schema: string) => {
     const token = await readCredentialsFile();
     if (!token) {
-        ups("Login first with acm-cli auth --email <email>");
+        ups("Log in first by selecting the auth option");
         return;
     }
 
@@ -27,7 +26,7 @@ const addSchemaAction = async (schema: string) => {
     const obj = {};
 
     for (const field of Schemas[schema].keyof()._def.values) {
-        obj[field] = await ask(`${field}? `);
+        obj[field] = await input({message: `Type the ${field}:`});
     }
     
     const parsedData = Schemas[schema].safeParse(obj);
@@ -70,7 +69,7 @@ export const deleteSchemaAction = async (schema: string) => {
         return;
     }
 
-    const id = await passwordPrompt("Type the ID of the register: ");
+    const id = await password({message: "Type the ID of the register:", mask: true});
 
     try {
 
@@ -97,11 +96,38 @@ export const injectSchemaCommand = (program: Command) => {
         .description('Add a new schema into the database, You must be logged in.')
         .argument('<name>', 'Schema to create')
         .action(addSchemaAction);
-
     program
         .command('delete')
         .argument('<name>', 'Schema name according to the register to delete.')
         .description('Delete one schema or register from the website')
         .action(deleteSchemaAction);
+}
 
+export const injectSchema = async () => {
+    const answer = await select({
+        message: 'Select an option',
+        choices: [
+            {
+                name: 'add',
+                value: 'add',
+                description: 'Add a new schema into the database, You must be logged in.',
+            },
+            {
+                name: 'delete',
+                value: 'delete',
+                description: 'Delete one schema or register from the website',
+            },
+        ],
+    });
+
+    switch (answer) {
+        case 'add':
+            const name = await input({ message: 'Type the schema name:' });
+            await addSchemaAction(name);
+            break;
+        case 'delete':
+            const schema = await input({ message: 'Type the schema name to delete:' });
+            await deleteSchemaAction(schema);
+            break;
+    }
 }
