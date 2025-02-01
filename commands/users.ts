@@ -1,3 +1,4 @@
+import {Command} from "commander";
 import { info, readCredentialsFile, success, ups } from "../utils";
 import Config from "../config";
 import { input, password, select } from "@inquirer/prompts";
@@ -71,6 +72,19 @@ const deleteUserAction = async (email: string) => {
     } catch (e) {
         ups(e)
     }
+}
+
+export const injectUsersCommand = (program: Command) => {
+    program
+        .command('add')
+        .description('Register a user for access to this CLI')
+        .action(addUserAction);
+    
+    program
+        .command('delete')
+        .description('Delete a user to deny the access to this CLI')
+        .argument('<email>', 'Email to deny the access')
+        .action(deleteUserAction);
 }
 
 export const injectUsers = async () => {

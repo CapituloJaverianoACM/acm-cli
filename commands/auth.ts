@@ -1,3 +1,4 @@
+import { Command } from "commander";
 import Config from "../config";
 import { info, success, ups } from "../utils";
 import { input, password, select } from '@inquirer/prompts';
@@ -27,6 +28,14 @@ const loginAction = async ({ email } : { email : string }) => {
 
     Config.set('jwt', token);
     success("Token saved.");
+}
+
+export const injectAuthCommand = (program: Command) : void => {
+    program
+        .command('login')
+        .description('Authenticate to the ACM Xaverian Chapter API')
+        .requiredOption('-e, --email <email>', 'College email for auth')
+        .action(loginAction);
 }
 
 export const injectAuth = async () => {

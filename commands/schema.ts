@@ -1,3 +1,4 @@
+import { Command } from 'commander';
 import { readCredentialsFile, success, ups, verifyJWTExpiration } from "../utils";
 import Schemas from '../schemas/schemas';
 import Config from "../config";
@@ -87,6 +88,19 @@ export const deleteSchemaAction = async (schema: string) => {
     }
 
     success(`${schema} deleted successfully`);
+}
+
+export const injectSchemaCommand = (program: Command) => {
+    program
+        .command('add')
+        .description('Add a new schema into the database, You must be logged in.')
+        .argument('<name>', 'Schema to create')
+        .action(addSchemaAction);
+    program
+        .command('delete')
+        .argument('<name>', 'Schema name according to the register to delete.')
+        .description('Delete one schema or register from the website')
+        .action(deleteSchemaAction);
 }
 
 export const injectSchema = async () => {
