@@ -6,6 +6,9 @@ export const colors = chalk;
 export const ups = (msg : any) => {
     console.log("\nUps, Something went bad");
     console.log(chalk.red.bold("[ERROR] " + msg));
+    if (msg instanceof Object) {
+        console.log(msg)
+    }
 }
 
 export const info = (msg: any) => {

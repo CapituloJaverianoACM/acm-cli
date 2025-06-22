@@ -1,10 +1,16 @@
-import { Command } from 'commander';
-import { readCredentialsFile, success, ups, verifyJWTExpiration } from "../utils";
-import Schemas from '../schemas/schemas';
+import { Command } from "commander";
+import {
+    readCredentialsFile,
+    success,
+    ups,
+    verifyJWTExpiration,
+} from "../utils";
+import Schemas from "../schemas/schemas";
 import Config from "../config";
 import { input, password, select } from "@inquirer/prompts";
 
-const checkSchemaExist = (schema: string) => (Schemas[schema] !== undefined);
+const checkSchemaExist = (schema: string) => Schemas[schema] !== undefined;
+
 
 const addSchemaAction = async (schema: string) => {
     const token = await readCredentialsFile();
@@ -26,26 +32,29 @@ const addSchemaAction = async (schema: string) => {
     const obj = {};
 
     for (const field of Schemas[schema].keyof()._def.values) {
-        obj[field] = await input({message: `Type the ${field}:`});
+        obj[field] = await input({ message: `Type the ${field}:` });
     }
-    
+
     const parsedData = Schemas[schema].safeParse(obj);
     if (!parsedData.success) {
         ups(parsedData.error.errors);
-        return
+        return;
     }
 
     const data = parsedData.data;
 
     try {
-        const response = await fetch(Config.get('API_URL') + "/" + schema + "/create", {
-            method: 'POST',
-            headers: {
-                'Authorization': "Bearer " + token,
-                'Content-Type': 'application/json'
+        const response = await fetch(
+            Config.get("API_URL") + "/" + schema + "/create",
+            {
+                method: "POST",
+                headers: {
+                    Authorization: "Bearer " + token,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
             },
-            body: JSON.stringify(data)
-        });
+        );
 
         if (!response.ok) throw "Database broken (?)";
 
@@ -53,11 +62,9 @@ const addSchemaAction = async (schema: string) => {
     } catch (e) {
         ups(e);
     }
-
-}
+};
 
 export const deleteSchemaAction = async (schema: string) => {
-
     if (!checkSchemaExist(schema)) {
         ups("That Schema do not exist.");
         return;
@@ -69,65 +76,85 @@ export const deleteSchemaAction = async (schema: string) => {
         return;
     }
 
-    const id = await password({message: "Type the ID of the register:", mask: true});
+    const id = await password({
+        message: "Type the ID of the register:",
+        mask: true,
+    });
 
     try {
-
-        const response = await fetch(`${Config.get('API_URL')}/${schema}/${id}`, {
-            method: 'DELETE',
+        const response = await fetch(`${Config.get("API_URL")}/${schema}/${id}`, {
+            method: "DELETE",
             headers: {
-                'Authorization': "Bearer " + token
-            }
+                Authorization: "Bearer " + token,
+            },
         });
-        const responseJson : any = await response.json();
+        if (!response.ok) throw response.statusText;
+        const responseJson: any = await response.json();
+        if (responseJson.data.error) throw responseJson.data.error;
 
-        if (!response.ok) throw responseJson.error;
     } catch (e) {
         ups(e);
         return;
     }
 
     success(`${schema} deleted successfully`);
-}
+};
 
 export const injectSchemaCommand = (program: Command) => {
     program
-        .command('add')
-        .description('Add a new schema into the database, You must be logged in.')
-        .argument('<name>', 'Schema to create')
+        .command("add")
+        .description("Add a new schema into the database, You must be logged in.")
+        .argument("<name>", "Schema to create")
         .action(addSchemaAction);
     program
-        .command('delete')
-        .argument('<name>', 'Schema name according to the register to delete.')
-        .description('Delete one schema or register from the website')
+        .command("delete")
+        .argument("<name>", "Schema name according to the register to delete.")
+        .description("Delete one schema or register from the website")
         .action(deleteSchemaAction);
-}
+};
 
 export const injectSchema = async () => {
     const answer = await select({
-        message: 'Select an option',
+        message: "Select an option",
         choices: [
             {
-                name: 'add',
-                value: 'add',
-                description: 'Add a new schema into the database, You must be logged in.',
+                name: "add",
+                value: "add",
+                description:
+                    "Add a new schema into the database, You must be logged in.",
             },
             {
-                name: 'delete',
-                value: 'delete',
-                description: 'Delete one schema or register from the website',
+                name: "delete",
+                value: "delete",
+                description: "Delete one schema or register from the website",
             },
         ],
     });
 
     switch (answer) {
-        case 'add':
-            const name = await input({ message: 'Type the schema name:' });
+        case "add":
+            const name = await select<string>({
+                message: "Select a schema",
+                choices: Object.keys(Schemas).map((schemaName) => {
+                    return {
+                        name: schemaName,
+                        value: schemaName,
+                    };
+                }),
+            });
             await addSchemaAction(name);
             break;
-        case 'delete':
-            const schema = await input({ message: 'Type the schema name to delete:' });
+        case "delete":
+            const schema = await select<string>({
+                message: "Select the schema name for elements deletion.",
+                choices: Object.keys(Schemas).map((schemaName) => {
+                    return {
+                        name: schemaName,
+                        value: schemaName,
+                    };
+                }),
+            });
             await deleteSchemaAction(schema);
             break;
     }
-}
+};
