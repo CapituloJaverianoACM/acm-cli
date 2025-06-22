@@ -30,8 +30,12 @@ const addSchemaAction = async (schema: string) => {
     }
 
     const obj = {};
-
+    const schemaShape = Schemas[schema].shape;
     for (const field of Schemas[schema].keyof()._def.values) {
+        const description = schemaShape[field]?._def?.description;
+        if (description) {
+            console.log(`\n${description}`);
+        }
         obj[field] = await input({ message: `Type the ${field}:` });
     }
 
