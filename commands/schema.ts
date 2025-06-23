@@ -8,6 +8,7 @@ import {
 import Schemas from "../schemas/schemas";
 import Config from "../config";
 import { input, password, select } from "@inquirer/prompts";
+import chalk from "chalk";
 
 const checkSchemaExist = (schema: string) => Schemas[schema] !== undefined;
 
@@ -30,10 +31,16 @@ const addSchemaAction = async (schema: string) => {
     }
 
     const obj = {};
-
+    const schemaShape = Schemas[schema].shape;
     for (const field of Schemas[schema].keyof()._def.values) {
-        obj[field] = await input({ message: `Type the ${field}:` });
+    const description = schemaShape[field]?._def?.description;
+    if (description) {
+        console.log(
+            chalk.red.italic(description)
+        );
     }
+    obj[field] = await input({ message: chalk.blue(`${field}:`) });
+}
 
     const parsedData = Schemas[schema].safeParse(obj);
     if (!parsedData.success) {
