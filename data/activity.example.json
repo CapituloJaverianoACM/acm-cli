@@ -1,0 +1,22 @@
+[
+  {
+    "title": "Intro to AI",
+    "description": "A beginner-friendly introduction to artificial intelligence concepts.",
+    "eventType": "Workshop",
+    "link": "https://example.com/event",
+    "location": "Auditorium A",
+    "duration": "2h",
+    "speaker": "Jane Doe",
+    "timestamp": "2025-07-15T10:00:00Z"
+  },
+  {
+    "title": "Operating Systems",
+    "description": "A beginner-friendly introduction to operating systems concepts.",
+    "eventType": "Workshop",
+    "link": "https://example.com/event",
+    "location": "Auditorium A",
+    "duration": "2h",
+    "speaker": "Jane Doe",
+    "timestamp": "2025-07-15T10:00:00Z"
+  }
+]

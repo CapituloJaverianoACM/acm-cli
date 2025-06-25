@@ -9,6 +9,7 @@ import Schemas from "../schemas/schemas";
 import Config from "../config";
 import { input, password, select } from "@inquirer/prompts";
 import chalk from "chalk";
+import { promises as fs } from "fs";
 
 const checkSchemaExist = (schema: string) => Schemas[schema] !== undefined;
 
@@ -33,14 +34,14 @@ const addSchemaAction = async (schema: string) => {
     const obj = {};
     const schemaShape = Schemas[schema].shape;
     for (const field of Schemas[schema].keyof()._def.values) {
-    const description = schemaShape[field]?._def?.description;
-    if (description) {
-        console.log(
-            chalk.red.italic(description)
-        );
+        const description = schemaShape[field]?._def?.description;
+        if (description) {
+            console.log(
+                chalk.red.italic(description)
+            );
+        }
+        obj[field] = await input({ message: chalk.blue(`${field}:`) });
     }
-    obj[field] = await input({ message: chalk.blue(`${field}:`) });
-}
 
     const parsedData = Schemas[schema].safeParse(obj);
     if (!parsedData.success) {
@@ -68,6 +69,61 @@ const addSchemaAction = async (schema: string) => {
         success(`${schema} added!`);
     } catch (e) {
         ups(e);
+    }
+};
+
+const bulkInsertSchemaAction = async (schema: string, filePath: string) => {
+    const token = await readCredentialsFile();
+    if (!token) {
+        ups("Log in first by selecting the auth option");
+        return;
+    }
+
+    if (!(await verifyJWTExpiration())) {
+        ups("Your token expired! Auth again.");
+        return;
+    }
+
+    if (!checkSchemaExist(schema)) {
+        ups("That schema does not exist");
+        return;
+    }
+
+    try {
+        const content = await fs.readFile(filePath, "utf-8");
+        const data = JSON.parse(content);
+
+        if (!Array.isArray(data)) {
+            ups("The JSON file must contain an array of records.");
+            return;
+        }
+
+        const validated = data.map(item => Schemas[schema].safeParse(item));
+        const invalids = validated.filter(v => !v.success);
+
+        if (invalids.length > 0) {
+            ups(`Found ${invalids.length} invalid records. Fix them before retrying.`);
+            console.error(invalids.map(v => v.success ? null : v.error?.errors));
+            return;
+        }
+
+        const parsedData = validated.map(v => (v as any).data);
+
+        const response = await fetch(`${Config.get("API_URL")}/${schema}/createMany`, {
+            method: "POST",
+            headers: {
+                Authorization: "Bearer " + token,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(parsedData),
+        });
+
+        if (!response.ok) throw await response.text();
+        success(`Bulk insert of ${schema} records successful! (Note: Only new records were inserted; existing ones were skipped)`);
+
+    } catch (e) {
+        ups("Error during bulk insert:");
+        console.error(e);
     }
 };
 
@@ -114,6 +170,12 @@ export const injectSchemaCommand = (program: Command) => {
         .argument("<name>", "Schema to create")
         .action(addSchemaAction);
     program
+        .command("bulk")
+        .description("Insert multiple records into the database from a JSON file. You must be logged in.")
+        .argument("<schema>", "Schema name")
+        .argument("<file>", "Path to JSON file")
+        .action(bulkInsertSchemaAction);
+    program
         .command("delete")
         .argument("<name>", "Schema name according to the register to delete.")
         .description("Delete one schema or register from the website")
@@ -129,6 +191,11 @@ export const injectSchema = async () => {
                 value: "add",
                 description:
                     "Add a new schema into the database, You must be logged in.",
+            },
+            {
+                name: "bulk",
+                value: "bulk",
+                description: "Insert multiple records into the database from a JSON file. You must be logged in.",
             },
             {
                 name: "delete",
@@ -150,6 +217,23 @@ export const injectSchema = async () => {
                 }),
             });
             await addSchemaAction(name);
+            break;
+        case "bulk":
+            const bulkSchema = await select<string>({
+                message: "Select a schema",
+                choices: Object.keys(Schemas).map((schemaName) => ({
+                    name: schemaName,
+                    value: schemaName,
+                })),
+            });
+
+            let defaultPath = `./data/${bulkSchema}.json`;
+
+            const filePath = await input({
+                message: "Enter the path to the JSON file:",
+                default: defaultPath,
+            });
+            await bulkInsertSchemaAction(bulkSchema, filePath);
             break;
         case "delete":
             const schema = await select<string>({
