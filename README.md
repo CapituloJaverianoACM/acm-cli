@@ -65,4 +65,4 @@ npm unlink -g acm-cli
 
 - Sebastian Galindo. [@TalkySafe143](https://github.com/TalkySafe143)
 - Adrian Ruiz. [@adrianrrruiz](https://github.com/adrianrrruiz)
-
+- Salomon Avila [@SalomonAvila](https://github.com/SalomonAvila)
