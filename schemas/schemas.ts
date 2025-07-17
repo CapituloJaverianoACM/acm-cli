@@ -28,18 +28,18 @@ const arrayFromString = <T extends ZodTypeAny>(schema: T) => {
 };
 
 const members = z.object({
-  _id: z.coerce.number().describe("Numero de identificacion del miembro"),
+  _id: z.coerce.number().describe("Número de identificación del miembro"),
   name: z.string().describe("Nombre completo del miembro"),
   title: z.string().describe("Carrera estudiada o en proceso"),
-  role: z.string().describe("En que se desempeña actualemente en el grupo"),
+  role: z.string().describe("En que se desempeña actualmente en el grupo"),
   email: z.string().email().describe("Correo de la universidad"),
   bio: z.string().describe("Biografía breve del miembro"),
-  skills: arrayFromString(z.string()).describe("Destrezas y areas de habilidad del miebro"),
+  skills: arrayFromString(z.string()).describe("Destrezas y áreas de habilidad del miembro. Ej: JavaScript,Python,Git y GitHub"),
   image: z.string().optional().describe("Imagen con el formato https://drive.google.com/uc?export=view&id=ID_DEL_ARCHIVO"),
-  active: z.coerce.boolean().describe("Si es un miebro activo o en su defecto fue miembro pasado del capitulo"),
+  active: z.coerce.boolean().describe("Si es un miembro activo o en su defecto fue miembro pasado del capítulo (true o false)"),
   linkedin: z.string().optional().describe("Link de LinkedIn del miembro"),
-  github: z.string().optional().describe("Link de Github del miembro"),
-  memberSince: z.string().describe("Fecha de ingreso al grupo"),
+  github: z.string().optional().describe("Link de GitHub del miembro"),
+  memberSince: z.string().describe("Periodo de ingreso al grupo. Ej: 2024-1"),
 });
 
 export default {
