@@ -14,20 +14,26 @@ import { promises as fs } from "fs";
 const checkSchemaExist = (schema: string) => Schemas[schema] !== undefined;
 
 
-const addSchemaAction = async (schema: string) => {
+async function validateSessionAndSchema(schema: string): Promise<string | null> {
     const token = await readCredentialsFile();
     if (!token) {
         ups("Log in first by selecting the auth option");
-        return;
+        return null;
     }
-
     if (!(await verifyJWTExpiration())) {
         ups("Your token expired! Auth again.");
-        return;
+        return null;
     }
-
     if (!checkSchemaExist(schema)) {
         ups("That schema does not exist");
+        return null;
+    }
+    return token;
+}
+
+const addSchemaAction = async (schema: string) => {
+    const token = await validateSessionAndSchema(schema);
+    if (!token) {
         return;
     }
 
@@ -73,19 +79,8 @@ const addSchemaAction = async (schema: string) => {
 };
 
 const bulkInsertSchemaAction = async (schema: string, filePath: string) => {
-    const token = await readCredentialsFile();
+    const token = await validateSessionAndSchema(schema);
     if (!token) {
-        ups("Log in first by selecting the auth option");
-        return;
-    }
-
-    if (!(await verifyJWTExpiration())) {
-        ups("Your token expired! Auth again.");
-        return;
-    }
-
-    if (!checkSchemaExist(schema)) {
-        ups("That schema does not exist");
         return;
     }
 
@@ -127,15 +122,83 @@ const bulkInsertSchemaAction = async (schema: string, filePath: string) => {
     }
 };
 
-export const deleteSchemaAction = async (schema: string) => {
-    if (!checkSchemaExist(schema)) {
-        ups("That Schema do not exist.");
+export const updateSchemaAction = async (schema: string) => {
+    const token = await validateSessionAndSchema(schema);
+    if (!token) {
         return;
     }
 
-    const token = await readCredentialsFile();
+    const id = await password({
+        message: "Type the ID of the register:",
+        mask: true,
+    });
+
+    let currentData;
+    try {
+        const response = await fetch(`${Config.get("API_URL")}/${schema}/${id}`, {
+            method: "GET",
+            headers: {
+                Authorization: "Bearer " + token,
+            },
+        });
+        if (!response.ok) throw await response.text();
+        const responseJson: any = await response.json();
+        if (responseJson.error) throw responseJson.error;
+        currentData = responseJson.data;
+    } catch (e) {
+        ups("The current record could not be obtained: " + e);
+        return;
+    }
+
+    const obj: any = {};
+    const schemaShape = Schemas[schema].shape;
+    for (const field of Schemas[schema].keyof()._def.values) {
+        // No permitir editar el campo '_id' ni 'id'
+        if (field === '_id' || field === 'id') {
+            obj[field] = currentData[field];
+            continue;
+        }
+        const description = schemaShape[field]?._def?.description;
+        if (description) {
+            console.log(chalk.red.italic(description));
+        }
+        obj[field] = await input({
+            message: chalk.blue(`${field}:`),
+            default: currentData[field] !== undefined ? String(currentData[field]) : undefined,
+        });
+    }
+
+    const parsedData = Schemas[schema].safeParse(obj);
+    if (!parsedData.success) {
+        ups(parsedData.error.errors);
+        return;
+    }
+
+    const data = parsedData.data;
+
+    try {
+        const response = await fetch(`${Config.get("API_URL")}/${schema}/${id}`, {
+            method: "PUT",
+            headers: {
+                Authorization: "Bearer " + token,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw await response.text();
+        const responseJson: any = await response.json();
+        if (responseJson.error) throw responseJson.error;
+    } catch (e) {
+        ups(e);
+        return;
+    }
+
+    success(`${schema} updated successfully`);
+}
+
+export const deleteSchemaAction = async (schema: string) => {
+    const token = await validateSessionAndSchema(schema);
     if (!token) {
-        ups("Must be logged!");
         return;
     }
 
@@ -176,6 +239,11 @@ export const injectSchemaCommand = (program: Command) => {
         .argument("<file>", "Path to JSON file")
         .action(bulkInsertSchemaAction);
     program
+        .command("update")
+        .description("Update a record into the database. You must be logged in.")
+        .argument("<schema>", "Schema name to update")
+        .action(updateSchemaAction);
+    program
         .command("delete")
         .argument("<name>", "Schema name according to the register to delete.")
         .description("Delete one schema or register from the website")
@@ -189,13 +257,17 @@ export const injectSchema = async () => {
             {
                 name: "add",
                 value: "add",
-                description:
-                    "Add a new schema into the database, You must be logged in.",
+                description: "Add a new schema into the database. You must be logged in.",
             },
             {
                 name: "bulk",
                 value: "bulk",
                 description: "Insert multiple records into the database from a JSON file. You must be logged in.",
+            },
+            {
+                name: "update",
+                value: "update",
+                description: "Update a record into the database. You must be logged in.",
             },
             {
                 name: "delete",
@@ -234,6 +306,18 @@ export const injectSchema = async () => {
                 default: defaultPath,
             });
             await bulkInsertSchemaAction(bulkSchema, filePath);
+            break;
+        case "update":
+            const updateSchema = await select<string>({
+                message: "Select the schema name to update a record.",
+                choices: Object.keys(Schemas).map((schemaName) => {
+                    return {
+                        name: schemaName,
+                        value: schemaName,
+                    };
+                }),
+            });
+            await updateSchemaAction(updateSchema);
             break;
         case "delete":
             const schema = await select<string>({
