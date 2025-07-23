@@ -1,8 +1,10 @@
-import Conf from "conf";
+import Conf, { Options } from "conf";
 
-const Config = new Conf( { projectName: 'acm-cli' });
+const options: Partial<Options<Record<string, string>>> & { API_URL: string } = {
+  API_URL: 'https://api.example.com',
+  projectName: "acm-cli"
+};
 
-const API_URL = "https://acm-api-ysx5.onrender.com";
-Config.set('API_URL', API_URL);
+const Config = new Conf(options);
 
 export default Config;

@@ -9,7 +9,10 @@ const loginAction = async ({ email } : { email : string }) => {
 
     let token = "";
     try {
-        const response = await fetch(Config.get('API_URL') + "/auth/login", {
+        const response = await fetch(new URL(
+            "/auth/login", 
+            Config.get('API_URL')
+        ).toString(), {
             headers: {
                 "Authorization": "Basic " + Buffer.from(`${email}:${_password}`, 'binary').toString('base64')
             }
