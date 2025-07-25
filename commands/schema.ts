@@ -59,7 +59,10 @@ const addSchemaAction = async (schema: string) => {
 
     try {
         const response = await fetch(
-            Config.get("API_URL") + "/" + schema + "/create",
+            new URL(
+                `/${schema}/create`,
+                Config.get("API_URL")
+            ).toString(),
             {
                 method: "POST",
                 headers: {
@@ -104,7 +107,11 @@ const bulkInsertSchemaAction = async (schema: string, filePath: string) => {
 
         const parsedData = validated.map(v => (v as any).data);
 
-        const response = await fetch(`${Config.get("API_URL")}/${schema}/createMany`, {
+        const response = await fetch(
+            new URL(
+                `/${schema}/createMany`,
+                Config.get("API_URL")
+            ).toString(), {
             method: "POST",
             headers: {
                 Authorization: "Bearer " + token,
@@ -135,7 +142,10 @@ export const updateSchemaAction = async (schema: string) => {
 
     let currentData;
     try {
-        const response = await fetch(`${Config.get("API_URL")}/${schema}/${id}`, {
+        const response = await fetch(new URL(
+            `/${schema}/${id}`,
+            Config.get("API_URL")
+        ).toString(), {
             method: "GET",
             headers: {
                 Authorization: "Bearer " + token,
@@ -177,7 +187,10 @@ export const updateSchemaAction = async (schema: string) => {
     const data = parsedData.data;
 
     try {
-        const response = await fetch(`${Config.get("API_URL")}/${schema}/${id}`, {
+        const response = await fetch(new URL(
+            `/${schema}/${id}`,
+            Config.get("API_URL")
+        ).toString(), {
             method: "PUT",
             headers: {
                 Authorization: "Bearer " + token,
@@ -208,7 +221,10 @@ export const deleteSchemaAction = async (schema: string) => {
     });
 
     try {
-        const response = await fetch(`${Config.get("API_URL")}/${schema}/${id}`, {
+        const response = await fetch(new URL(
+            `/${schema}/${id}`,
+            Config.get("API_URL")
+        ).toString(), {
             method: "DELETE",
             headers: {
                 Authorization: "Bearer " + token,

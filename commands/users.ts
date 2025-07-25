@@ -17,7 +17,10 @@ const addUserAction = async () => {
     const _password = await password({message: "Type the password: ", mask: true});
 
     try {
-        const response = await fetch(`${Config.get('API_URL')}/users/create`, {
+        const response = await fetch(new URL(
+            `/users/create`,
+            Config.get("API_URL")
+        ).toString(), {
             method: 'POST',
             headers: {
                 'Authorization': "Bearer " + token,
@@ -56,7 +59,10 @@ const deleteUserAction = async (email: string) => {
     }
 
     try {
-        const response = await fetch(`${Config.get('API_URL')}/users/${email}`, {
+        const response = await fetch(new URL(
+            `/users/${email}`,
+            Config.get("API_URL")
+        ).toString(), {
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + token 
