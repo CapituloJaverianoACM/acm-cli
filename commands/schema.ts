@@ -38,15 +38,16 @@ const addSchemaAction = async (schema: string) => {
     }
 
     const obj = {};
-    const schemaShape = Schemas[schema].shape;
-    for (const field of Schemas[schema].keyof()._def.values) {
-        const description = schemaShape[field]?._def?.description;
+    const schemaShape = Schemas[schema]._def.shape;
+    const keys = Object.keys(schemaShape);
+    for (const key of keys) {
+        const description = schemaShape[key]?._def?.description;
         if (description) {
             console.log(
                 chalk.red.italic(description)
             );
         }
-        obj[field] = await input({ message: chalk.blue(`${field}:`) });
+        obj[key] = await input({ message: chalk.blue(`${key}:`) });
     }
 
     const parsedData = Schemas[schema].safeParse(obj);
@@ -161,20 +162,21 @@ export const updateSchemaAction = async (schema: string) => {
     }
 
     const obj: any = {};
-    const schemaShape = Schemas[schema].shape;
-    for (const field of Schemas[schema].keyof()._def.values) {
+    const schemaShape = Schemas[schema]._def.shape;
+    const keys = Object.keys(schemaShape);
+    for (const key of keys) {
         // No permitir editar el campo '_id' ni 'id'
-        if (field === '_id' || field === 'id') {
-            obj[field] = currentData[field];
+        if (key === '_id' || key === 'id') {
+            obj[key] = currentData[key];
             continue;
         }
-        const description = schemaShape[field]?._def?.description;
+        const description = schemaShape[key]?._def?.description;
         if (description) {
             console.log(chalk.red.italic(description));
         }
-        obj[field] = await input({
-            message: chalk.blue(`${field}:`),
-            default: currentData[field] !== undefined ? String(currentData[field]) : undefined,
+        obj[key] = await input({
+            message: chalk.blue(`${key}:`),
+            default: currentData[key] !== undefined ? String(currentData[key]) : undefined,
         });
     }
 
