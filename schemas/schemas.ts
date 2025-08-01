@@ -1,4 +1,4 @@
-import { z, ZodTypeAny } from 'zod';
+import { z, ZodType } from 'zod';
 
 const activity = z.object({
   title: z.string().describe("El titulo de la actividad que se va a desarrollar"),
@@ -11,7 +11,7 @@ const activity = z.object({
   timestamp: z.string().describe("Horario en el cual se va a realizar la actividad")
 }
 );
-const arrayFromString = <T extends ZodTypeAny>(schema: T) => {
+const arrayFromString = <T extends ZodType>(schema: T) => {
   return z.preprocess((obj: unknown) => {
     if (!obj) {
       return [];
@@ -32,7 +32,7 @@ const members = z.object({
   name: z.string().describe("Nombre completo del miembro"),
   title: z.string().describe("Carrera estudiada o en proceso"),
   role: z.string().describe("En que se desempeña actualmente en el grupo"),
-  email: z.string().email().describe("Correo de la universidad"),
+  email: z.email().describe("Correo de la universidad"),
   bio: z.string().describe("Biografía breve del miembro"),
   skills: arrayFromString(z.string()).describe("Destrezas y áreas de habilidad del miembro. Ej: JavaScript,Python,Git y GitHub"),
   image: z.string().optional().describe("Imagen con el formato https://drive.google.com/uc?export=view&id=ID_DEL_ARCHIVO"),
