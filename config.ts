@@ -9,4 +9,6 @@ const options: Partial<Options<Record<string, string>>> & { API_URL: string } = 
 
 const Config = new Conf(options);
 
+Config.set("API_URL", API_URL)
+
 export default Config;
