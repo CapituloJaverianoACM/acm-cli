@@ -1,6 +1,6 @@
 # 🚀 ACM CLI
 
-CLI for manipulating data used on the website and managing users. Make sure to be added first by the Super User ([acm@javeriana.edu.co](mailto\:acm@javeriana.edu.co)).
+CLI for manipulating data used on the website and managing users. Make sure to be added first by the Super User ([acm@javeriana.edu.co](mailto:acm@javeriana.edu.co)).
 
 ## ✅ **Prerequisites**
 
