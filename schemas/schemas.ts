@@ -1,14 +1,14 @@
 import { z, ZodTypeAny } from 'zod';
 
 const activity = z.object({
-  title: z.string().describe("El titulo de la actividad que se va a desarrollar"),
-  description: z.string().describe("Va a mostrar la descripción de la actividad en cuestion"),
-  eventType: z.string().describe("Tipo de actividad a realizar"),
-  link: z.string().optional().describe("(OPCIONAL) De ser necesario adicione un link relevante"),
-  location: z.string().optional().describe("Lugar donde se va a llevar a cabo la actividad"),
-  duration: z.string().describe("Cuanto tiempo se va a demorar la actividad"),
-  speaker: z.string().describe("Quien va a ser el speaker o encargado de la actividad"),
-  timestamp: z.string().describe("Horario en el cual se va a realizar la actividad")
+  title: z.string().describe("The title of the activity to be carried out"),
+  description: z.string().describe("Show the description of the activity"),
+  eventType: z.string().describe("Activity type"),
+  link: z.string().optional().describe("(OPTIONAL) If necessary, add a relevant link."),
+  location: z.string().optional().describe("Location where the activity will take place"),
+  duration: z.string().describe("How long will the activity take"),
+  speaker: z.string().describe("Name of the speaker or person in charge of the activity"),
+  timestamp: z.string().describe("Time at which the activity will take place")
 }
 );
 const arrayFromString = <T extends ZodTypeAny>(schema: T) => {
@@ -28,18 +28,18 @@ const arrayFromString = <T extends ZodTypeAny>(schema: T) => {
 };
 
 const members = z.object({
-  _id: z.coerce.number().describe("Número de identificación del miembro"),
-  name: z.string().describe("Nombre completo del miembro"),
-  title: z.string().describe("Carrera estudiada o en proceso"),
-  role: z.string().describe("En que se desempeña actualmente en el grupo"),
-  email: z.string().email().describe("Correo de la universidad"),
-  bio: z.string().describe("Biografía breve del miembro"),
-  skills: arrayFromString(z.string()).describe("Destrezas y áreas de habilidad del miembro. Ej: JavaScript,Python,Git y GitHub"),
-  image: z.string().optional().describe("Imagen con el formato https://drive.google.com/uc?export=view&id=ID_DEL_ARCHIVO"),
-  active: z.coerce.boolean().describe("Si es un miembro activo o en su defecto fue miembro pasado del capítulo (true o false)"),
-  linkedin: z.string().optional().describe("Link de LinkedIn del miembro"),
-  github: z.string().optional().describe("Link de GitHub del miembro"),
-  memberSince: z.string().describe("Periodo de ingreso al grupo. Ej: 2024-1"),
+  _id: z.coerce.number().describe("Member identification number (C.C or T.I)"),
+  name: z.string().describe("Member's full name"),
+  title: z.string().describe("Degree completed or in progress"),
+  role: z.string().describe("Current group role"),
+  email: z.string().email().describe("University email"),
+  bio: z.string().describe("Brief biography of the member"),
+  skills: arrayFromString(z.string()).describe("Member's skills and areas of expertise. E.j: JavaScript, Python, Git, and GitHub"),
+  image: z.string().optional().describe("Image with the format https://drive.google.com/uc?export=view&id=ID_DEL_ARCHIVO"),
+  active: z.coerce.boolean().describe("Whether you are an active member or were a past member of the chapter (true or false)"),
+  linkedin: z.string().optional().describe("Member's LinkedIn link"),
+  github: z.string().optional().describe("Member's GitHub link"),
+  memberSince: z.string().describe("Period of admission to the group. E.j: 2024-1"),
 });
 
 export default {
