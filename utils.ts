@@ -4,10 +4,10 @@ import Schemas from "./schemas/schemas";
 
 export const colors = chalk;
 
-export const ups = (msg: any) => {
+export const ups = (msg: any, printObject: boolean = false) => {
   console.log("\nUps, Something went bad");
   console.log(chalk.red.bold("[ERROR] " + msg));
-  if (msg instanceof Object) {
+  if (printObject) {
     console.log(msg);
   }
 };
