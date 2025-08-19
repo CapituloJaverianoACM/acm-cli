@@ -16,35 +16,46 @@ const arrayFromString = <T extends ZodType>(schema: T) => {
   }, z.array(schema));
 };
 
-const activity = z.object({
-  title: z
-    .string()
-    .describe("Activity title"),
-  description: z
-    .string()
-    .describe("Activity description"),
-  eventType: z.string().describe("Activity type"),
-  link: z
-    .string()
-    .optional()
-    .describe("(OPTIONAL) If necessary, add a relevant link."),
-  location: z
-    .string()
-    .optional()
-    .describe("Location where the activity will take place"),
-  duration: z.string().describe("How long will the activity take"),
-  speaker: z
-    .string()
-    .describe("Name of the speaker or person in charge of the activity?"),
-  timestamp: z.iso
-    .time()
-    .describe("Time at which the activity will take place"),
-  date: z.iso
-    .date()
-    .describe(
-      "Date in YYYY-MM-DD format on which the activity will take place",
-    ),
-});
+const activity = z.preprocess((val) => {
+    if (typeof val === "object" && val !== null) {
+        const obj = val as any;
+        if (obj.timestamp && obj.date) {
+          obj.timestamp = `${obj.date}T${obj.timestamp}Z`;
+        }
+        return obj;
+      }
+    return val;
+  },
+  z.object({
+    title: z
+      .string()
+      .describe("Activity title"),
+    description: z
+      .string()
+      .describe("Activity description"),
+    eventType: z.string().describe("Activity type"),
+    link: z
+      .string()
+      .optional()
+      .describe("(OPTIONAL) If necessary, add a relevant link."),
+    location: z
+      .string()
+      .optional()
+      .describe("Location where the activity will take place"),
+    duration: z.string().describe("How long will the activity take"),
+    speaker: z
+      .string()
+      .describe("Name of the speaker or person in charge of the activity?"),
+    timestamp: z.iso
+      .datetime()
+      .describe("Time at which the activity will take place in hh:mm format (military time)"),
+    date: z.iso
+      .date()
+      .describe(
+        "Date in YYYY-MM-DD format on which the activity will take place",
+      ),
+  })
+)
 
 const members = z.object({
   _id: z.coerce.number().describe("Member identification number (C.C or T.I)"),
@@ -80,25 +91,39 @@ const members = z.object({
 
 const constestLevelOptions = ["Initial", "Advanced"];
 
-const contests = z.object({
-  name: z.string().describe("Contest name"),
-  date: z.iso.date().describe("Date of contest in YYYY-MM-DD format"),
-  start_hour: z.iso
-    .datetime()
-    .describe(
-      "Contest start time in yyyy-mm-ddThh:mmZ format (military time)"),
-  final_hour: z.iso
-    .datetime()
-    .describe(
-      "Final time of the contest in yyyy-mm-ddThh:mmZ format (military time)"),
-  level: z
-    .enum(constestLevelOptions)
-    .describe(`Contest level (${constestLevelOptions.join(",")})`),
-  classroom: z
-    .string()
-    .optional()
-    .describe("University classroom where the contest will take place"),
-});
+const contests = z.preprocess((val) => {
+    if (typeof val === "object" && val !== null) {
+        const obj = val as any;
+        if (obj.start_hour && obj.date) {
+          obj.start_hour = `${obj.date}T${obj.start_hour}Z`;
+        }
+        if (obj.final_hour && obj.date) {
+          obj.final_hour = `${obj.date}T${obj.final_hour}Z`;
+        }
+        return obj;
+      }
+    return val;
+  },
+  z.object({
+    name: z.string().describe("Contest name"),
+    date: z.iso.date().describe("Date of contest in YYYY-MM-DD format"),
+    start_hour: z.iso
+      .datetime()
+      .describe(
+        "Contest start time in hh:mm format (military time)"),
+    final_hour: z.iso
+      .datetime()
+      .describe(
+        "Final time of the contest in hh:mm format (military time)"),
+    level: z
+      .enum(constestLevelOptions)
+      .describe(`Contest level (${constestLevelOptions.join(",")})`),
+    classroom: z
+      .string()
+      .optional()
+      .describe("University classroom where the contest will take place"),
+  })
+)
 
 export default {
   activity,
