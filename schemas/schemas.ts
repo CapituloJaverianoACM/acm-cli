@@ -100,8 +100,14 @@ const contests = z.object({
     .describe("University classroom where the contest will take place"),
 });
 
+const pictures = z.object({
+  contest_id: z.coerce.number().describe("Contest ID"),
+  link: z.string().describe("URL of the picture"),
+});
+
 export default {
   activity,
   members,
   contests,
+  pictures
 };
