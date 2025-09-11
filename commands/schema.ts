@@ -10,9 +10,7 @@ import Config from "../config";
 import { input, password, select } from "@inquirer/prompts";
 import chalk from "chalk";
 import { promises as fs } from "fs";
-import { parse } from "path";
 import { ZodError } from "zod";
-import { fi } from "zod/locales";
 
 const addSchemaAction = async (schema: string) => {
     const token = await validateSessionAndSchema(schema);
@@ -141,7 +139,7 @@ export const updateSchemaAction = async (schema: string) => {
         if (!response.ok) throw await response.text();
         const responseJson: any = await response.json();
         if (responseJson.error) throw responseJson.error;
-        currentData = responseJson.data;
+        currentData = Array.isArray(responseJson.data) ? responseJson.data[0] : responseJson.data;
     } catch (e) {
         ups("The current record could not be obtained: " + e);
         return;
