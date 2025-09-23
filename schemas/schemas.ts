@@ -36,13 +36,53 @@ const members = z.object({
   bio: z.string().describe("Biografía breve del miembro"),
   skills: arrayFromString(z.string()).describe("Destrezas y áreas de habilidad del miembro. Ej: JavaScript,Python,Git y GitHub"),
   image: z.string().optional().describe("Imagen con el formato https://drive.google.com/uc?export=view&id=ID_DEL_ARCHIVO"),
-  active: z.coerce.boolean().describe("Si es un miembro activo o en su defecto fue miembro pasado del capítulo (true o false)"),
+  active: z.stringbool().describe("Si es un miembro activo o en su defecto fue miembro pasado del capítulo (true o false)"),
   linkedin: z.string().optional().describe("Link de LinkedIn del miembro"),
   github: z.string().optional().describe("Link de GitHub del miembro"),
   memberSince: z.string().describe("Periodo de ingreso al grupo. Ej: 2024-1"),
 });
 
+const results = z.object({
+  local_id: z.string().describe("ID del primer participante"),
+  visitant_id: z.string().describe("ID del segundo participante"),
+  winner_id: z.string().describe("ID del ganador"),
+  contest_id: z.string().describe("ID del concurso al que pertenece el resultado"),
+})
+
+const participation = z.object({
+  contest_id: z.number(),
+  student_id: z.number(),
+  position: z.number().nullable(),
+  checkin: z.boolean(),
+})
+
+const participationArray = z.object({
+  error: z.any().nullable(),
+  data: z.array(participation),
+});
+
+const student = z.object({
+  id: z.number(),
+  name: z.string(),
+  surname: z.string(),
+  matches_count: z.number().nullable(),
+  victory_count: z.number().nullable(),
+  level: z.string(),
+  avatar: z.string().nullable(),
+  supabase_user_id: z.string(),
+})
+
+const studentObject = z.object({
+  error: z.any().nullable(),
+  data: z.array(student),
+})
+
 export default {
   activity,
-  members
+  members,
+  results,
+  participation,
+  participationArray,
+  student,
+  studentObject,
 }; 
