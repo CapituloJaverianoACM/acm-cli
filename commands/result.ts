@@ -189,11 +189,15 @@ export const injectResult = async () => {
          * Este es el que no me está dejando crear
          */
         const validate = Schemas.results.safeParse(resultsData);
+
+        if(validate.error) {
+            throw new Error(validate.error.message)
+        }
+
         try {
             const send = await fetch(
-                new URL(
-                    Config.get("API_URL") + `/results/create`,
-
+                new URL(`/results/create`,
+                    Config.get("API_URL")
                 ).toString(),
                 {
                     method: "POST",
@@ -205,6 +209,7 @@ export const injectResult = async () => {
                 },
             );
 
+            if (!send.ok) throw new Error(await send.text())
         }
         catch (e) {
             ups(e);
