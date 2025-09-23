@@ -142,10 +142,10 @@ export const injectResult = async () => {
 
         //Crear el objeto para los resultados
         const resultsData = {
-            local_id: firstParticipantID,
-            visitant_id: secondParticipantID,
-            winner_id: winnerID,
-            contest_id: contestID
+            local_id: Number(firstParticipantID),
+            visitant_id: Number(secondParticipantID),
+            winner_id: Number(winnerID),
+            contest_id: Number(contestID)
         }
 
         //Crear las variables que solo tengan los datos que nos interesan
