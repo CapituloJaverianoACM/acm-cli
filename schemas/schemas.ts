@@ -43,10 +43,10 @@ const members = z.object({
 });
 
 const results = z.object({
-  local_id: z.string().describe("ID del primer participante"),
-  visitant_id: z.string().describe("ID del segundo participante"),
-  winner_id: z.string().describe("ID del ganador"),
-  contest_id: z.string().describe("ID del concurso al que pertenece el resultado"),
+  local_id: z.number().describe("ID del primer participante"),
+  visitant_id: z.number().describe("ID del segundo participante"),
+  winner_id: z.number().describe("ID del ganador"),
+  contest_id: z.number().describe("ID del concurso al que pertenece el resultado"),
 })
 
 const participation = z.object({
