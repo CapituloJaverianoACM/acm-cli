@@ -31,7 +31,7 @@ export const injectResult = async () => {
     }
 
     //Se pide el ID del contest
-    const contestID = await input({ message: chalk.blue(`Enter match ID: `) });
+    const contestID = await input({ message: chalk.blue(`Enter contest ID: `) });
 
     // console.log(`Contest ID is: ${contestID}`)
 
@@ -214,8 +214,8 @@ export const injectResult = async () => {
         catch (e) {
             ups(e);
         }
+        console.log("Registrado el resultado")
     } catch (e) {
         ups(e);
     }
-    console.log("Registrado el resultado")
 }
