@@ -1,35 +1,16 @@
 import { Command } from "commander";
 import {
-    readCredentialsFile,
+    checkSchemaExist,
     success,
     ups,
-    verifyJWTExpiration,
+    validateSessionAndSchema,
 } from "../utils";
 import Schemas from "../schemas/schemas";
 import Config from "../config";
 import { input, password, select } from "@inquirer/prompts";
 import chalk from "chalk";
 import { promises as fs } from "fs";
-
-const checkSchemaExist = (schema: string) => Schemas[schema] !== undefined;
-
-
-async function validateSessionAndSchema(schema: string): Promise<string | null> {
-    const token = await readCredentialsFile();
-    if (!token) {
-        ups("Log in first by selecting the auth option");
-        return null;
-    }
-    if (!(await verifyJWTExpiration())) {
-        ups("Your token expired! Auth again.");
-        return null;
-    }
-    if (!checkSchemaExist(schema)) {
-        ups("That schema does not exist");
-        return null;
-    }
-    return token;
-}
+import { ZodError } from "zod";
 
 const addSchemaAction = async (schema: string) => {
     const token = await validateSessionAndSchema(schema);
@@ -41,18 +22,19 @@ const addSchemaAction = async (schema: string) => {
     const schemaShape = Schemas[schema]._def.shape;
     const keys = Object.keys(schemaShape);
     for (const key of keys) {
-        const description = schemaShape[key]?._def?.description;
+        const description = schemaShape[key]?.description;
         if (description) {
-            console.log(
-                chalk.red.italic(description)
-            );
+            console.log(chalk.red.italic(description));
         }
         obj[key] = await input({ message: chalk.blue(`${key}:`) });
     }
 
     const parsedData = Schemas[schema].safeParse(obj);
     if (!parsedData.success) {
-        ups(parsedData.error.errors);
+        const errorsArray = (parsedData.error as ZodError).issues.map((e) => {
+            return e.message + " in " + e.path.join(" and ");
+        });
+        ups(errorsArray)
         return;
     }
 
@@ -60,10 +42,7 @@ const addSchemaAction = async (schema: string) => {
 
     try {
         const response = await fetch(
-            new URL(
-                `/${schema}/create`,
-                Config.get("API_URL")
-            ).toString(),
+            new URL(`/${schema}/create`, Config.get("API_URL")).toString(),
             {
                 method: "POST",
                 headers: {
@@ -74,9 +53,12 @@ const addSchemaAction = async (schema: string) => {
             },
         );
 
-        if (!response.ok) throw "Database broken (?)";
+        if (!response.ok) throw `Request returned: ${response.statusText}`;
 
-        success(`${schema} added!`);
+        const json = await response.json();
+
+        success(`${schema} added! Record inserted: `);
+        console.log((json as any).data);
     } catch (e) {
         ups(e);
     }
@@ -97,33 +79,35 @@ const bulkInsertSchemaAction = async (schema: string, filePath: string) => {
             return;
         }
 
-        const validated = data.map(item => Schemas[schema].safeParse(item));
-        const invalids = validated.filter(v => !v.success);
+        const validated = data.map((item) => Schemas[schema].safeParse(item));
+        const invalids = validated.filter((v) => !v.success);
 
         if (invalids.length > 0) {
-            ups(`Found ${invalids.length} invalid records. Fix them before retrying.`);
-            console.error(invalids.map(v => v.success ? null : v.error?.errors));
+            ups(
+                `Found ${invalids.length} invalid records. Fix them before retrying.`,
+            );
+            console.error(invalids.map((v) => (v.success ? null : v.error?.errors)));
             return;
         }
 
-        const parsedData = validated.map(v => (v as any).data);
+        const parsedData = validated.map((v) => (v as any).data);
 
         const response = await fetch(
-            new URL(
-                `/${schema}/createMany`,
-                Config.get("API_URL")
-            ).toString(), {
-            method: "POST",
-            headers: {
-                Authorization: "Bearer " + token,
-                "Content-Type": "application/json",
+            new URL(`/${schema}/createMany`, Config.get("API_URL")).toString(),
+            {
+                method: "POST",
+                headers: {
+                    Authorization: "Bearer " + token,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(parsedData),
             },
-            body: JSON.stringify(parsedData),
-        });
+        );
 
         if (!response.ok) throw await response.text();
-        success(`Bulk insert of ${schema} records successful! (Note: Only new records were inserted; existing ones were skipped)`);
-
+        success(
+            `Bulk insert of ${schema} records successful! (Note: Only new records were inserted; existing ones were skipped)`,
+        );
     } catch (e) {
         ups("Error during bulk insert:");
         console.error(e);
@@ -143,19 +127,19 @@ export const updateSchemaAction = async (schema: string) => {
 
     let currentData;
     try {
-        const response = await fetch(new URL(
-            `/${schema}/${id}`,
-            Config.get("API_URL")
-        ).toString(), {
-            method: "GET",
-            headers: {
-                Authorization: "Bearer " + token,
+        const response = await fetch(
+            new URL(`/${schema}/${id}`, Config.get("API_URL")).toString(),
+            {
+                method: "GET",
+                headers: {
+                    Authorization: "Bearer " + token,
+                },
             },
-        });
+        );
         if (!response.ok) throw await response.text();
         const responseJson: any = await response.json();
         if (responseJson.error) throw responseJson.error;
-        currentData = responseJson.data;
+        currentData = Array.isArray(responseJson.data) ? responseJson.data[0] : responseJson.data;
     } catch (e) {
         ups("The current record could not be obtained: " + e);
         return;
@@ -166,7 +150,7 @@ export const updateSchemaAction = async (schema: string) => {
     const keys = Object.keys(schemaShape);
     for (const key of keys) {
         // No permitir editar el campo '_id' ni 'id'
-        if (key === '_id' || key === 'id') {
+        if (key === "_id" || key === "id") {
             obj[key] = currentData[key];
             continue;
         }
@@ -176,7 +160,8 @@ export const updateSchemaAction = async (schema: string) => {
         }
         obj[key] = await input({
             message: chalk.blue(`${key}:`),
-            default: currentData[key] !== undefined ? String(currentData[key]) : undefined,
+            default:
+                currentData[key] !== undefined ? String(currentData[key]) : undefined,
         });
     }
 
@@ -189,17 +174,17 @@ export const updateSchemaAction = async (schema: string) => {
     const data = parsedData.data;
 
     try {
-        const response = await fetch(new URL(
-            `/${schema}/${id}`,
-            Config.get("API_URL")
-        ).toString(), {
-            method: "PUT",
-            headers: {
-                Authorization: "Bearer " + token,
-                "Content-Type": "application/json",
+        const response = await fetch(
+            new URL(`/${schema}/${id}`, Config.get("API_URL")).toString(),
+            {
+                method: "PUT",
+                headers: {
+                    Authorization: "Bearer " + token,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
             },
-            body: JSON.stringify(data),
-        });
+        );
         if (!response.ok) throw await response.text();
         const responseJson: any = await response.json();
         if (responseJson.error) throw responseJson.error;
@@ -209,7 +194,7 @@ export const updateSchemaAction = async (schema: string) => {
     }
 
     success(`${schema} updated successfully`);
-}
+};
 
 export const deleteSchemaAction = async (schema: string) => {
     const token = await validateSessionAndSchema(schema);
@@ -223,19 +208,18 @@ export const deleteSchemaAction = async (schema: string) => {
     });
 
     try {
-        const response = await fetch(new URL(
-            `/${schema}/${id}`,
-            Config.get("API_URL")
-        ).toString(), {
-            method: "DELETE",
-            headers: {
-                Authorization: "Bearer " + token,
+        const response = await fetch(
+            new URL(`/${schema}/${id}`, Config.get("API_URL")).toString(),
+            {
+                method: "DELETE",
+                headers: {
+                    Authorization: "Bearer " + token,
+                },
             },
-        });
+        );
         if (!response.ok) throw response.statusText;
         const responseJson: any = await response.json();
         if (responseJson.data.error) throw responseJson.data.error;
-
     } catch (e) {
         ups(e);
         return;
@@ -244,7 +228,40 @@ export const deleteSchemaAction = async (schema: string) => {
     success(`${schema} deleted successfully`);
 };
 
+const readSchemaAction = async (schema: string) => {
+    if (!checkSchemaExist(schema)) {
+        ups(`The schema ${schema} do not exist`);
+        return;
+    }
+
+    const id = await input({
+        message: "Type the ID field of the record",
+    });
+
+    let json = {};
+    try {
+        const response = await fetch(
+            new URL(`/${schema}/${id}`, Config.get("API_URL")).toString(),
+        );
+
+        let err = response.statusText;
+        if (!response.ok) throw `The request went bad: ${err}`;
+        json = await response.json();
+    } catch (e) {
+        ups(e);
+        return;
+    }
+
+    console.log((json as any).data);
+};
+
 export const injectSchemaCommand = (program: Command) => {
+    program
+        .command("read")
+        .description("Read a single schema record from the database")
+        .argument("<name>", "Schema to query")
+        .action(readSchemaAction);
+
     program
         .command("add")
         .description("Add a new schema into the database, You must be logged in.")
@@ -252,7 +269,9 @@ export const injectSchemaCommand = (program: Command) => {
         .action(addSchemaAction);
     program
         .command("bulk")
-        .description("Insert multiple records into the database from a JSON file. You must be logged in.")
+        .description(
+            "Insert multiple records into the database from a JSON file. You must be logged in.",
+        )
         .argument("<schema>", "Schema name")
         .argument("<file>", "Path to JSON file")
         .action(bulkInsertSchemaAction);
@@ -273,19 +292,27 @@ export const injectSchema = async () => {
         message: "Select an option",
         choices: [
             {
+                name: "read",
+                value: "read",
+                description: "Read a schema with ID",
+            },
+            {
                 name: "add",
                 value: "add",
-                description: "Add a new schema into the database. You must be logged in.",
+                description:
+                    "Add a new schema into the database. You must be logged in.",
             },
             {
                 name: "bulk",
                 value: "bulk",
-                description: "Insert multiple records into the database from a JSON file. You must be logged in.",
+                description:
+                    "Insert multiple records into the database from a JSON file. You must be logged in.",
             },
             {
                 name: "update",
                 value: "update",
-                description: "Update a record into the database. You must be logged in.",
+                description:
+                    "Update a record into the database. You must be logged in.",
             },
             {
                 name: "delete",
@@ -307,6 +334,18 @@ export const injectSchema = async () => {
                 }),
             });
             await addSchemaAction(name);
+            break;
+        case "read":
+            const readSchema = await select<string>({
+                message: "Select a schema",
+                choices: Object.keys(Schemas).map((schemaName) => {
+                    return {
+                        name: schemaName,
+                        value: schemaName,
+                    };
+                }),
+            });
+            await readSchemaAction(readSchema);
             break;
         case "bulk":
             const bulkSchema = await select<string>({
