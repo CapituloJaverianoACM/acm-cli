@@ -69,33 +69,19 @@ const pictures = z.object({
   link: z.string().describe("URL de la imagen"),
 });
 
-const results = z.object({
-  local_id: z.number().describe("ID del primer participante"),
-  visitant_id: z.number().describe("ID del segundo participante"),
-  winner_id: z.number().describe("ID del ganador"),
-  contest_id: z.number().describe("ID del concurso al que pertenece el resultado"),
-})
-
-const participation = z.object({
-  contest_id: z.number().describe("ID del concurso en el que participa el estudiante"),
-  student_id: z.number().describe("ID del estudiante que participa en el concurso"),
-  position: z.number().optional().describe("Posición final del estudiante en el concurso (puede ser nulo si no se conoce)"),
-  checkin: z.stringbool().describe("Indica si el estudiante hizo check-in en el concurso (true o false)"),
-})
-
-const student = z.object({
+// TODO: Esta entidad temporalmente solo sería para editar algún atributo, las otras acciones CRUD no tienen
+// sentido en este contexto.
+const students = z.object({
   name: z.string().describe("Nombre del estudiante"),
   surname: z.string().describe("Apellido del estudiante"),
   level: z.enum(levelOptions).describe(`Nivel del estudiante (${levelOptions.join(",")})`),
   avatar: z.string().optional().describe("URL del avatar del estudiante"),
-})
+});
 
 export default {
   activity,
   members,
-  results,
-  participation,
-  student,
+  students,
   contests,
   pictures
 }; 
