@@ -1,27 +1,13 @@
-import { input, password, select } from "@inquirer/prompts";
+import { input, select } from "@inquirer/prompts";
 
 import Config from "../config";
 import chalk from "chalk";
 import {
-    readCredentialsFile,
     success,
     ups,
-    verifyJWTExpiration,
+    validateSession
 } from "../utils";
 import Schemas from "../schemas/schemas";
-
-async function validateSession(): Promise<string | null> {
-    const token = await readCredentialsFile();
-    if (!token) {
-        ups("Log in first by selecting the auth option");
-        return null;
-    }
-    if (!(await verifyJWTExpiration())) {
-        ups("Your token expired! Auth again.");
-        return null;
-    }
-    return token;
-}
 
 export const injectResult = async () => {
 
@@ -30,191 +16,106 @@ export const injectResult = async () => {
         return;
     }
 
-    //Se pide el ID del contest
     const contestID = await input({ message: chalk.blue(`Enter contest ID: `) });
 
-    // console.log(`Contest ID is: ${contestID}`)
-
     try {
-        /**
-         * Se piden todos los registros de la tabla "participation" asociadas
-         * al contestID. 
-         */
-        const response = await fetch(
+        const responseContest = await fetch(
             new URL(
-                Config.get("API_URL") + `/participation?contest_id=${contestID}`
+                Config.get("API_URL") + `/participation/contest/${contestID}`
             ).toString(),
             {
                 method: "GET",
             },
         );
-        /**
-         * Si se rompe (que no deberia) tira un error
-         */
-        if (!response.ok) {
-            throw new Error(`Error fetching data: ${response.statusText}`);
+
+        if (!responseContest.ok) throw responseContest.statusText;
+        const responseContestJson: any = await responseContest.json();
+
+        const studentIds = responseContestJson.data.map(item => item.student_id);
+
+        const responseParticipants = await fetch(
+            new URL(`/students/bulk-query/id`, Config.get("API_URL")).toString(),
+            {
+                method: "POST",
+                headers: {
+                    Authorization: "Bearer " + token,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    ids: studentIds,
+                }),
+            },
+        );
+        if (!responseParticipants.ok) throw responseParticipants.statusText;
+        const responseParticipantsJson: any = await responseParticipants.json();
+
+        const participants = responseParticipantsJson.data;
+        if (participants.length < 2) {
+            throw new Error("Not enough participants found in the contest.");
         }
 
-        //Aca establecemos el formato del response con un esquema creado
-        const respuesta = await response.json();
-        const responseData = Schemas.participationArray.parse(respuesta);
+        console.log(chalk.green("List of participants:"));
+        participants.forEach((student: any) => {
+            console.log(`ID: ${student.id}, Name: ${student.name} ${student.surname}`);
+        });
 
-        //Extraemos unicamente los student_id
-        const studentIds = responseData.data.map(item => item.student_id)
-        console.log(studentIds)
-
-        //Pedimos el primer ID
         const firstParticipantID = parseInt(await input({ message: chalk.blue("Input first participant ID: ") }), 10);
 
-        //Revisamos si esta en la lista anterior, si no lo está tira un error
         if (!studentIds.includes(firstParticipantID)) {
             throw new Error(`Participant ID ${firstParticipantID} not found in contest participants.`);
         }
 
-        //Pedimos el segundo ID
         const secondParticipantID = parseInt(await input({ message: chalk.blue("Input second participant ID: ") }), 10);
 
-        //Revisamos si esta en la lista anterior, si no lo está tira un error
         if (!studentIds.includes(secondParticipantID) || firstParticipantID === secondParticipantID) {
             throw new Error(`Participant ID ${secondParticipantID} not found in contest participants or is the same as the first participant.`);
         }
 
-        //Se consulta en la API y se traen todos los datos de ambos participantes
-        const completeFirstParticipant = await fetch(
-            new URL(
-                Config.get("API_URL") + `/students/${firstParticipantID}`
-            ).toString(),
-            {
-                method: "GET",
-            },
-        );
-        if (!completeFirstParticipant.ok) {
-            throw new Error(`Error fetching data: ${response.statusText}`);
-        }
-        //Aca establecemos el formato del response
-        const responseFirstParticipant = Schemas.studentObject.parse(await completeFirstParticipant.json())
+        var firstParticipant = participants.find((student: any) => student.id === firstParticipantID);
+        var secondParticipant = participants.find((student: any) => student.id === secondParticipantID);
 
-        const completeSecondParticipant = await fetch(
-            new URL(
-                Config.get("API_URL") + `/students/${secondParticipantID}`
-            ).toString(),
-            {
-                method: "GET",
-            },
-        );
-        if (!completeSecondParticipant.ok) {
-            throw new Error(`Error fetching data: ${response.statusText}`);
-        }
-        const responseSecondParticipant = Schemas.studentObject.parse(await completeSecondParticipant.json())
-
-        //Elegir la respuesta con las flechas
-        const answer = await select({
+        const winnerID = await select({
             message: chalk.blue("Select the winner: "),
             choices: [
                 {
-                    name: `Participant ${responseFirstParticipant.data[0].name}`,
+                    name: `Participant ${firstParticipant.name}`,
                     value: firstParticipantID,
                 },
                 {
-                    name: `Participant ${responseSecondParticipant.data[0].name}`,
+                    name: `Participant ${secondParticipant.name}`,
                     value: secondParticipantID,
                 },
             ],
         });
-        //Variable para poner el ID del ganador
-        var winnerID;
 
-        //Actualizar el contador de partidas de cada uno de los participantes
-        responseFirstParticipant.data[0].matches_count = (responseFirstParticipant.data[0].matches_count ?? 0) + 1;
-        responseSecondParticipant.data[0].matches_count = (responseSecondParticipant.data[0].matches_count ?? 0) + 1;
-        switch (answer) {
-            case firstParticipantID:
-                winnerID = firstParticipantID;
-                responseFirstParticipant.data[0].victory_count = (responseFirstParticipant.data[0].victory_count ?? 0) + 1;
-                break;
-            case secondParticipantID:
-                winnerID = secondParticipantID;
-                responseSecondParticipant.data[0].victory_count = (responseSecondParticipant.data[0].victory_count ?? 0) + 1;
-                break;
-            default:
-                throw new Error("Invalid selection");
+        const result = {
+            local_id: firstParticipantID,
+            visitant_id: secondParticipantID,
+            winner_id: winnerID,
+            contest_id: parseInt(contestID, 10),
+        };
+        const parsedResult = Schemas.results.safeParse(result);
+
+        if (parsedResult.error) {
+            throw new Error(parsedResult.error.message)
         }
 
-        //Crear el objeto para los resultados
-        const resultsData = {
-            local_id: Number(firstParticipantID),
-            visitant_id: Number(secondParticipantID),
-            winner_id: Number(winnerID),
-            contest_id: Number(contestID)
-        }
-
-        //Crear las variables que solo tengan los datos que nos interesan
-        const updatedFirstParticipant = responseFirstParticipant.data[0];
-        const updatedSecondParticipant = responseSecondParticipant.data[0];
-
-        //Actualizar el registro del estudiante
-        //Sospecho que será por algun tema de permisos pero realmente no sabria
-        try {
-            await fetch(
-                new URL(`${Config.get("API_URL")}/students/${firstParticipantID}`).toString(),
-                {
-                    method: "PUT",
-                    headers: {
-                        Authorization: "Bearer " + token,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(updatedFirstParticipant),
-                }
-            );
-        } catch (e) {
-            ups(e);
-        }
-
-        try {
-            await fetch(
-                new URL(`${Config.get("API_URL")}/students/${secondParticipantID}`).toString(),
-                {
-                    method: "PUT",
-                    headers: {
-                        Authorization: "Bearer " + token,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(updatedSecondParticipant),
-                }
-            );
-        } catch (e) {
-            ups(e);
-        }
-        /**
-         * Este es el que no me está dejando crear
-         */
-        const validate = Schemas.results.safeParse(resultsData);
-
-        if(validate.error) {
-            throw new Error(validate.error.message)
-        }
-
-        try {
-            const send = await fetch(
-                new URL(`/results/create`,
-                    Config.get("API_URL")
-                ).toString(),
-                {
-                    method: "POST",
-                    headers: {
-                        Authorization: "Bearer " + token,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(validate.data),
+        const responseCreateResult = await fetch(
+            new URL(`/results/create`,
+                Config.get("API_URL")
+            ).toString(),
+            {
+                method: "POST",
+                headers: {
+                    Authorization: "Bearer " + token,
+                    "Content-Type": "application/json",
                 },
-            );
+                body: JSON.stringify(parsedResult.data),
+            },
+        );
+        if (!responseCreateResult.ok) throw await responseCreateResult.text();
 
-            if (!send.ok) throw new Error(await send.text())
-        }
-        catch (e) {
-            ups(e);
-        }
-        console.log("Registrado el resultado")
+        success("Registrado el resultado")
     } catch (e) {
         ups(e);
     }

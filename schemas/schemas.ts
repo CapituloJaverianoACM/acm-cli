@@ -1,16 +1,5 @@
 import { z, ZodType } from 'zod';
 
-const activity = z.object({
-  title: z.string().describe("El titulo de la actividad que se va a desarrollar"),
-  description: z.string().describe("Va a mostrar la descripción de la actividad en cuestion"),
-  eventType: z.string().describe("Tipo de actividad a realizar"),
-  link: z.string().optional().describe("(OPCIONAL) De ser necesario adicione un link relevante"),
-  location: z.string().optional().describe("Lugar donde se va a llevar a cabo la actividad"),
-  duration: z.string().describe("Cuanto tiempo se va a demorar la actividad"),
-  speaker: z.string().describe("Quien va a ser el speaker o encargado de la actividad"),
-  timestamp: z.string().describe("Horario en el cual se va a realizar la actividad")
-}
-);
 const arrayFromString = <T extends ZodType>(schema: T) => {
   return z.preprocess((obj: unknown) => {
     if (!obj) {
@@ -27,19 +16,57 @@ const arrayFromString = <T extends ZodType>(schema: T) => {
   }, z.array(schema));
 };
 
+const activity = z.object({
+  title: z.string().describe("El título de la actividad que se va a desarrollar"),
+  description: z.string().describe("Descripción de la actividad en cuestión"),
+  eventType: z.string().describe("Tipo de actividad a realizar"),
+  link: z.string().optional().describe("(OPCIONAL) Si es necesario, adicione un enlace relevante"),
+  location: z.string().optional().describe("Lugar donde se llevará a cabo la actividad"),
+  duration: z.string().describe("Duración estimada de la actividad"),
+  speaker: z.string().describe("Persona encargada o speaker de la actividad"),
+  timestamp: z.string().describe("Horario en el cual se realizará la actividad")
+});
+
 const members = z.object({
   _id: z.coerce.number().describe("Número de identificación del miembro"),
   name: z.string().describe("Nombre completo del miembro"),
   title: z.string().describe("Carrera estudiada o en proceso"),
-  role: z.string().describe("En que se desempeña actualmente en el grupo"),
-  email: z.email().describe("Correo de la universidad"),
+  role: z.string().describe("Rol o función actual en el grupo"),
+  email: z.email().describe("Correo institucional de la universidad"),
   bio: z.string().describe("Biografía breve del miembro"),
   skills: arrayFromString(z.string()).describe("Destrezas y áreas de habilidad del miembro. Ej: JavaScript,Python,Git y GitHub"),
   image: z.string().optional().describe("Imagen con el formato https://drive.google.com/uc?export=view&id=ID_DEL_ARCHIVO"),
-  active: z.stringbool().describe("Si es un miembro activo o en su defecto fue miembro pasado del capítulo (true o false)"),
-  linkedin: z.string().optional().describe("Link de LinkedIn del miembro"),
-  github: z.string().optional().describe("Link de GitHub del miembro"),
+  active: z.stringbool().describe("Indica si es un miembro activo o fue miembro pasado del capítulo (true o false)"),
+  linkedin: z.string().optional().describe("Enlace de LinkedIn del miembro"),
+  github: z.string().optional().describe("Enlace de GitHub del miembro"),
   memberSince: z.string().describe("Periodo de ingreso al grupo. Ej: 2024-1"),
+});
+
+const levelOptions = ["Initial", "Advanced"];
+
+const contests = z.object({
+  name: z.string().describe("Nombre del concurso"),
+  date: z.iso.date().describe("Fecha del concurso en formato YYYY-MM-DD"),
+  start_hour: z.iso
+    .datetime()
+    .describe(
+      "Hora de inicio del concurso en formato yyyy-mm-ddThh:mmZ (hora militar)"),
+  final_hour: z.iso
+    .datetime()
+    .describe(
+      "Hora de finalización del concurso en formato yyyy-mm-ddThh:mmZ (hora militar)"),
+  level: z
+    .enum(levelOptions)
+    .describe(`Nivel del concurso (${levelOptions.join(",")})`),
+  classroom: z
+    .string()
+    .optional()
+    .describe("Aula universitaria donde se realizará el concurso"),
+});
+
+const pictures = z.object({
+  contest_id: z.coerce.number().describe("ID del concurso"),
+  link: z.string().describe("URL de la imagen"),
 });
 
 const results = z.object({
@@ -50,31 +77,17 @@ const results = z.object({
 })
 
 const participation = z.object({
-  contest_id: z.number(),
-  student_id: z.number(),
-  position: z.number().nullable(),
-  checkin: z.boolean(),
+  contest_id: z.number().describe("ID del concurso en el que participa el estudiante"),
+  student_id: z.number().describe("ID del estudiante que participa en el concurso"),
+  position: z.number().optional().describe("Posición final del estudiante en el concurso (puede ser nulo si no se conoce)"),
+  checkin: z.stringbool().describe("Indica si el estudiante hizo check-in en el concurso (true o false)"),
 })
-
-const participationArray = z.object({
-  error: z.any().nullable(),
-  data: z.array(participation),
-});
 
 const student = z.object({
-  id: z.number(),
-  name: z.string(),
-  surname: z.string(),
-  matches_count: z.number().nullable(),
-  victory_count: z.number().nullable(),
-  level: z.string(),
-  avatar: z.string().nullable(),
-  supabase_user_id: z.string(),
-})
-
-const studentObject = z.object({
-  error: z.any().nullable(),
-  data: z.array(student),
+  name: z.string().describe("Nombre del estudiante"),
+  surname: z.string().describe("Apellido del estudiante"),
+  level: z.enum(levelOptions).describe(`Nivel del estudiante (${levelOptions.join(",")})`),
+  avatar: z.string().optional().describe("URL del avatar del estudiante"),
 })
 
 export default {
@@ -82,7 +95,7 @@ export default {
   members,
   results,
   participation,
-  participationArray,
   student,
-  studentObject,
+  contests,
+  pictures
 }; 
