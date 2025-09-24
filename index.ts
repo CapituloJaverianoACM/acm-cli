@@ -6,6 +6,7 @@ import { injectSchemaCommand } from "./commands/schema";
 import { injectUsersCommand } from "./commands/users";
 import { colors } from "./utils";
 import { injectFriendly } from "./commands/friendly";
+import { injectResult } from "./commands/result";
 const figlet = require("figlet");
 
 console.log(
@@ -39,6 +40,11 @@ const users = program
     "[SUPER USER ONLY] Commands for manage allowed users to use this CLI",
   );
 injectUsersCommand(users);
+
+program
+  .command("result")
+  .description("Register a match result")
+  .action(injectResult);
 
 // Friendly UI
 program

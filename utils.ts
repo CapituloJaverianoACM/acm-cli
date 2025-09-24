@@ -51,9 +51,7 @@ export const verifyJWTExpiration = async (): Promise<boolean> => {
 export const checkSchemaExist = (schema: string) =>
   Schemas[schema] !== undefined;
 
-export async function validateSessionAndSchema(
-  schema: string,
-): Promise<string | null> {
+export async function validateSession(): Promise<string | null> {
   const token = await readCredentialsFile();
   if (!token) {
     ups("Log in first by selecting the auth option");
@@ -63,6 +61,13 @@ export async function validateSessionAndSchema(
     ups("Your token expired! Auth again.");
     return null;
   }
+  return token;
+}
+
+export async function validateSessionAndSchema(
+  schema: string,
+): Promise<string | null> {
+  const token = await validateSession();
   if (!checkSchemaExist(schema)) {
     ups("That schema does not exist");
     return null;
