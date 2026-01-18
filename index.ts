@@ -10,7 +10,7 @@ import { injectResult } from "./commands/result";
 const figlet = require("figlet");
 
 console.log(
-  colors.yellow.bold(figlet.textSync("ACM-CLI", { horizontalLayout: "full" })),
+  colors.blue.bold(figlet.textSync("ACM-CLI", { horizontalLayout: "full" })),
 );
 
 console.log(
