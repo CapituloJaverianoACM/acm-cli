@@ -17,17 +17,20 @@ const addUserAction = async () => {
     message: "Type the password: ",
     mask: true,
   });
+  const name = await input({message: "Type users name: "});
+  const surname = await input({message: "Type users surname: "});
+
 
   try {
     const response = await fetch(
-      new URL(`/users/create`, Config.get("API_URL")).toString(),
+      new URL(`/admins/create`, Config.get("API_URL")).toString(),
       {
         method: "POST",
         headers: {
           Authorization: "Bearer " + token,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password: _password }),
+        body: JSON.stringify({ email, password: _password , name, surname}),
       },
     );
 
@@ -37,11 +40,11 @@ const addUserAction = async () => {
 
     success("User added!");
   } catch (e) {
-    ups(e);
+    ups(e,true);
   }
 };
 
-const deleteUserAction = async (email: string) => {
+const deleteUserAction = async (id: string) => {
   const token = await readCredentialsFile();
 
   if (!token) {
@@ -59,7 +62,8 @@ const deleteUserAction = async (email: string) => {
 
   try {
     const response = await fetch(
-      new URL(`/users/${email}`, Config.get("API_URL")).toString(),
+
+      new URL(`/admins/${id}`, Config.get("API_URL")).toString(),
       {
         method: "DELETE",
         headers: {
@@ -113,10 +117,10 @@ export const injectUsers = async () => {
       await addUserAction();
       break;
     case "delete":
-      const email = await input({
-        message: "Type the email to deny the access:",
+      const id = await input({
+        message: "Type the ID to deny the access:",
       });
-      await deleteUserAction(email);
+      await deleteUserAction(id);
       break;
   }
 };
