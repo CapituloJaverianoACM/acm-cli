@@ -6,11 +6,7 @@
     "role": "DevOps",
     "email": "ejemplo@javeriana.edu.co",
     "bio": "Bio de ejemplo.",
-    "skills": [
-      "Programación competitiva",
-      "Nube",
-      "Redes"
-    ],
+    "skills": ["Programación competitiva", "Nube", "Redes"],
     "image": "https://drive.google.com/uc?export=view&id=ID_DEL_ARCHIVO>",
     "active": true,
     "linkedin": "https://linkedin.com/in/ejemplo-33863323a",
