@@ -69,19 +69,10 @@ const pictures = z.object({
   link: z.string().describe("URL de la imagen"),
 });
 
-// TODO: Esta entidad temporalmente solo sería para editar algún atributo, las otras acciones CRUD no tienen
-// sentido en este contexto.
-const students = z.object({
-  name: z.string().describe("Nombre del estudiante"),
-  surname: z.string().describe("Apellido del estudiante"),
-  level: z.enum(levelOptions).describe(`Nivel del estudiante (${levelOptions.join(",")})`),
-  avatar: z.string().optional().describe("URL del avatar del estudiante"),
-});
 
 export default {
   activity,
   members,
-  students,
   contests,
   pictures
 }; 
