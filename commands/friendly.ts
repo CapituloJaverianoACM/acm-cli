@@ -3,6 +3,7 @@ import { injectAuth } from "./auth";
 import { injectSchema } from "./schema";
 import { injectUsers } from "./users";
 import { injectResult } from "./result";
+import { injectStudent } from "./student";
 
 export const injectFriendly = async () => {
 
@@ -24,13 +25,18 @@ export const injectFriendly = async () => {
                 value: 'result',
                 description: 'Register a match result'
             },
+            {
+                name: 'student',
+                value: 'student',
+                description: 'Update student information (Codeforces handle or role)'
+            },
             new Separator(),
             {
                 name: 'users',
                 value: 'users',
                 description: '[SUPER USER ONLY] Commands for manage allowed users to use this CLI',
             },
-        
+
         ],
     });
 
@@ -46,6 +52,8 @@ export const injectFriendly = async () => {
             break;
         case 'result':
             injectResult();
+        case 'student':
+            injectStudent();
         default:
             break;
     }
