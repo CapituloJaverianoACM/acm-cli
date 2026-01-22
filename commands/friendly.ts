@@ -4,6 +4,7 @@ import { injectSchema } from "./schema";
 import { injectUsers } from "./users";
 import { injectResult } from "./result";
 import { injectStudent } from "./student";
+import { injectContest } from "./contest";
 
 export const injectFriendly = async () => {
 
@@ -30,6 +31,11 @@ export const injectFriendly = async () => {
                 value: 'student',
                 description: 'Update student information (Codeforces handle or role)'
             },
+            {
+                name: 'contest',
+                value: 'contest',
+                description: 'Start a contest'
+            },
             new Separator(),
             {
                 name: 'users',
@@ -52,8 +58,13 @@ export const injectFriendly = async () => {
             break;
         case 'result':
             injectResult();
+            break;
         case 'student':
             injectStudent();
+            break;
+        case 'contest':
+            injectContest();
+            break;
         default:
             break;
     }
