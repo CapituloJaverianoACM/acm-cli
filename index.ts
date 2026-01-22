@@ -8,6 +8,7 @@ import { colors } from "./utils";
 import { injectFriendly } from "./commands/friendly";
 import { injectResult } from "./commands/result";
 import { injectStudent } from "./commands/student";
+import { injectContest } from "./commands/contest";
 const figlet = require("figlet");
 
 console.log(
@@ -51,6 +52,11 @@ program
   .command("student")
   .description("Update student information (Codeforces handle or role)")
   .action(injectStudent);
+
+program
+  .command("contest")
+  .description("Start a contest")
+  .action(injectContest);
 
 // Friendly UI
 program
