@@ -55,7 +55,7 @@ program
 
 program
   .command("contest")
-  .description("Start a contest")
+  .description("Manage contest (start or finish)")
   .action(injectContest);
 
 // Friendly UI

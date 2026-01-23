@@ -34,7 +34,7 @@ export const injectFriendly = async () => {
             {
                 name: 'contest',
                 value: 'contest',
-                description: 'Start a contest'
+                description: 'Manage contest (start or finish)'
             },
             new Separator(),
             {
