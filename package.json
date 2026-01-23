@@ -6,6 +6,7 @@
   },
   "type": "module",
   "scripts": {
+    "dev": "bun index.ts",
     "build": "bun build index.ts --target=node --outfile=./bin/index.js"
   },
   "devDependencies": {

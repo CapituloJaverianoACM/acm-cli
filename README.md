@@ -38,7 +38,7 @@ bun run build
 Run the following command inside the project folder:
 
 ```sh
-npm link
+bun link
 ```
 
 This will create a global symlink, allowing you to use the CLI anywhere on your system.
@@ -58,7 +58,7 @@ If the command executes successfully, the setup is complete.
 If you want to remove the global link, run:
 
 ```sh
-npm unlink -g acm-cli
+bun unlink
 ```
 
 ## 👨‍💻 **Developers**
